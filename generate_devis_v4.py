@@ -1164,7 +1164,7 @@ class Devis:
         valeur initiale barrée — utile pour mettre en avant un geste
         commercial tout en montrant la valeur réelle du travail.
         """
-        tjm = 100  # TJM par défaut, surchargeable
+        tjm = self.projet.tjm  # TJM lu depuis le JSON
         header_style = ParagraphStyle("mh", fontName=FONT_BOLD, fontSize=10,
             leading=14, textColor=COL_WHITE, alignment=TA_LEFT)
         subheader_style = ParagraphStyle("msh", fontName=FONT_BOLD, fontSize=9,
