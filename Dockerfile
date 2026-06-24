@@ -13,7 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY generate_devis_v4.py .
 COPY server.py .
 COPY assets/ ./assets/
-COPY fonts/ ./fonts/
 
 EXPOSE 8080
 
