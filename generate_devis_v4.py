@@ -355,6 +355,7 @@ class Devis:
     devis_no: str
     date_creation: str
     client: ClientInfo
+    projet: ProjetInfo = field(default_factory=ProjetInfo)
     sections: list[Section] = field(default_factory=list)
     contact: ContactInfo = field(default_factory=ContactInfo)
     emetteur: EmetteurInfo = field(default_factory=EmetteurInfo)
@@ -605,7 +606,7 @@ class Devis:
             return cls(
                 devis_no=meta["devis_no"],
                 date_creation=meta["date_creation"],
-                client=client, sections=sections, contact=contact,
+                client=client, projet=proj, sections=sections, contact=contact,
                 emetteur=emetteur,
                 assets_dir=assets_dir or Path(__file__).parent,
             )
@@ -698,7 +699,7 @@ class Devis:
             return cls(
                 devis_no=meta["devis_no"],
                 date_creation=meta["date_creation"],
-                client=client, sections=sections, contact=contact,
+                client=client, projet=proj, sections=sections, contact=contact,
                 emetteur=emetteur,
                 assets_dir=assets_dir or Path(__file__).parent,
             )
@@ -864,7 +865,7 @@ class Devis:
         return cls(
             devis_no=meta["devis_no"],
             date_creation=meta["date_creation"],
-            client=client, sections=sections, contact=contact,
+            client=client, projet=proj, sections=sections, contact=contact,
             emetteur=emetteur,
             assets_dir=assets_dir or Path(__file__).parent,
         )
@@ -1122,9 +1123,11 @@ class Devis:
                 if isinstance(s.data, dict):
                     out.append(self._build_module_table(
                         s.text, s.data["items"],
+                        tjm=self.projet.tjm,
                         offert=s.data.get("offert", False)))
                 else:
-                    out.append(self._build_module_table(s.text, s.data))
+                    out.append(self._build_module_table(
+                        s.text, s.data, tjm=self.projet.tjm))
                 continue
             if s.kind == "module_total":
                 out.append(self._build_grand_total(s.data))
@@ -1155,7 +1158,7 @@ class Devis:
                 continue
         return out
 
-    def _build_module_table(self, titre: str, items: list[tuple[str, float]],
+    def _build_module_table(self, titre: str, items: list[tuple[str, float]], tjm: int = 100,
                             offert: bool = False) -> Table:
         """Tableau d'un module : entête noir + lignes + sous-total.
 
@@ -1164,7 +1167,7 @@ class Devis:
         valeur initiale barrée — utile pour mettre en avant un geste
         commercial tout en montrant la valeur réelle du travail.
         """
-        tjm = 100  # TJM par défaut
+
         header_style = ParagraphStyle("mh", fontName=FONT_BOLD, fontSize=10,
             leading=14, textColor=COL_WHITE, alignment=TA_LEFT)
         subheader_style = ParagraphStyle("msh", fontName=FONT_BOLD, fontSize=9,
