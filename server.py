@@ -143,3 +143,62 @@ async def generate_devis(
             "X-Devis-No": devis_no,
         },
     )
+
+
+@app.post("/v1/generate-devis")
+async def generate_devis_v1(
+    request: Request,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> Response:
+    return await generate_devis(request, x_api_key)
+
+
+@app.post("/v1/generate-pptx")
+async def generate_pptx_endpoint(
+    request: Request,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> Response:
+    _check_auth(x_api_key)
+    try:
+        data = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+
+    job_id = uuid.uuid4().hex[:8]
+    with tempfile.TemporaryDirectory(prefix=f"pptx_{job_id}_") as tmp:
+        tmp_path = Path(tmp)
+        canonical_path = tmp_path / "canonical.json"
+        pptx_json_path = tmp_path / "pptx_input.json"
+        out_path = tmp_path / f"presentation_{job_id}.pptx"
+
+        canonical_path.write_text(json.dumps(data, ensure_ascii=False))
+
+        adapter = BASE_DIR / "canonical_to_pptx.py"
+        r1 = subprocess.run(
+            ["python3", str(adapter), "--input", str(canonical_path), "--output", str(pptx_json_path)],
+            capture_output=True, text=True, timeout=30
+        )
+        if r1.returncode != 0:
+            return JSONResponse(status_code=500, content={"error": "Adapter failed", "stderr": r1.stderr[-2000:]})
+
+        pptx_script = BASE_DIR / "generate-pptx.js"
+        slides_dir = BASE_DIR / "assets" / "slides"
+        r2 = subprocess.run(
+            ["node", str(pptx_script), "--input", str(pptx_json_path), "--output", str(out_path), "--assets-dir", str(slides_dir)],
+            capture_output=True, text=True, timeout=120
+        )
+        if r2.returncode != 0:
+            return JSONResponse(status_code=500, content={"error": "PPTX generation failed", "stderr": r2.stderr[-2000:]})
+
+        if not out_path.is_file():
+            raise HTTPException(status_code=500, detail="PPTX not produced")
+
+        pptx_bytes = out_path.read_bytes()
+
+    devis_no = data.get("meta", {}).get("devis_no", job_id)
+    filename = f"presentation_{devis_no}.pptx"
+    return Response(
+        content=pptx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
