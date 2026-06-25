@@ -1,7 +1,8 @@
 {
-  "name": "easygestion-pptx",
+  "name": "easygestion-api",
   "version": "1.0.0",
+  "private": true,
   "dependencies": {
-    "pptxgenjs": "^3.12.0"
+    "pptxgenjs": "^4.0.1"
   }
 }
