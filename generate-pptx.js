@@ -1,6 +1,6 @@
 /**
  * EasyGestion — Générateur PPTX (pptxgenjs)
- * Lit le JSON canonique et produit une présentation 22 slides (13.33 × 7.5 in).
+ * Lit le JSON canonique et produit une présentation 24 slides (13.33 × 7.5 in).
  */
 
 const pptxgen = require('pptxgenjs');
@@ -78,23 +78,23 @@ function buildSlide01_Couverture(slide, data, assetsDir) {
   });
 }
 
-function buildSlide02_Intro(slide, data, assetsDir) {
+function buildSlide02_Sommaire(slide, data, assetsDir) {
   addBackground(slide, 2, assetsDir);
 }
 
-function buildSlide03_Enjeux(slide, data, assetsDir) {
+function buildSlide03_Presentation1(slide, data, assetsDir) {
   addBackground(slide, 3, assetsDir);
 }
 
-function buildSlide04_Solution(slide, data, assetsDir) {
+function buildSlide04_Presentation2(slide, data, assetsDir) {
   addBackground(slide, 4, assetsDir);
 }
 
-function buildSlide05_Methodologie(slide, data, assetsDir) {
+function buildSlide05_Approche(slide, data, assetsDir) {
   addBackground(slide, 5, assetsDir);
 }
 
-function buildSlide06_Objectifs(slide, data, assetsDir) {
+function buildSlide06_Comprehension(slide, data, assetsDir) {
   addBackground(slide, 6, assetsDir);
 }
 
@@ -150,7 +150,7 @@ function buildSlide08_Fonctionnalites(slide, data, assetsDir) {
   });
 }
 
-function buildSlide09_Processus(slide, data, assetsDir) {
+function buildSlide09_TitreAcquisition(slide, data, assetsDir) {
   addBackground(slide, 9, assetsDir);
 }
 
@@ -178,7 +178,7 @@ function buildSlide10_Acquisition(slide, data, assetsDir) {
   });
 }
 
-function buildSlide11_Engagement(slide, data, assetsDir) {
+function buildSlide11_TitrePlanAction(slide, data, assetsDir) {
   addBackground(slide, 11, assetsDir);
 }
 
@@ -262,11 +262,11 @@ function buildSlide14_Technologies(slide, data, assetsDir) {
   });
 }
 
-function buildSlide15_Partenariat(slide, data, assetsDir) {
+function buildSlide15_TitreBudget(slide, data, assetsDir) {
   addBackground(slide, 15, assetsDir);
 }
 
-function buildSlide16_Budget(slide, data, assetsDir) {
+function buildSlide16_BudgetHeader(slide, data, assetsDir) {
   addBackground(slide, 16, assetsDir);
   const projet = data.projet || {};
   addText(slide, `${fmtEur(projet.budget || 0)} HT`, {
@@ -306,36 +306,48 @@ function buildSlide17_Repartition(slide, data, assetsDir) {
   });
 }
 
-function buildSlide18_Garanties(slide, data, assetsDir) {
-  addBackground(slide, 18, assetsDir);
+function buildSlide18_Nouveau1(pptx, _d, a) {
+  const s = pptx.addSlide();
+  addBackground(s, 18, a);
 }
 
-function buildSlide19_Jalons(slide, data, assetsDir) {
-  addBackground(slide, 19, assetsDir);
+function buildSlide19_Nouveau2(pptx, _d, a) {
+  const s = pptx.addSlide();
+  addBackground(s, 19, a);
 }
 
-function buildSlide20_Facturation(slide, data, assetsDir) {
-  addBackground(slide, 20, assetsDir);
+function buildSlide20_PourquoiNousTitre(pptx, _d, a) {
+  const s = pptx.addSlide();
+  addBackground(s, 20, a);
 }
 
-function buildSlide21_ProchainesEtapes(slide, data, assetsDir) {
-  addBackground(slide, 21, assetsDir);
+function buildSlide21_PourquoiNous(pptx, _d, a) {
+  const s = pptx.addSlide();
+  addBackground(s, 21, a);
 }
 
-function buildSlide22_Merci(slide, data, assetsDir) {
-  addBackground(slide, 22, assetsDir);
-  const emi = data.emetteur || {};
-  addText(slide, emi.contact_nom || '', {
-    x: 9.0, y: 6.0, w: 4.0, h: 0.35,
-    fontSize: 11, align: 'right',
+function buildSlide22_Annexes1(pptx, _d, a) {
+  const s = pptx.addSlide();
+  addBackground(s, 22, a);
+}
+
+function buildSlide23_Annexes2(pptx, _d, a) {
+  const s = pptx.addSlide();
+  addBackground(s, 23, a);
+}
+
+function buildSlide24_Merci(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
+  addBackground(slide, 24, assetsDir);
+  const em = data.emetteur || {};
+  addText(slide, em.contact_nom || '', {
+    x: 7, y: 5.6, w: 5.5, h: 0.4, fontSize: 14, bold: true,
   });
-  addText(slide, emi.contact_email || '', {
-    x: 9.0, y: 6.4, w: 4.0, h: 0.35,
-    fontSize: 10, color: COL_GREY, align: 'right',
+  addText(slide, em.contact_email || '', {
+    x: 7, y: 6.0, w: 5.5, h: 0.4, fontSize: 12, color: COL_GREY,
   });
-  addText(slide, emi.contact_tel || '', {
-    x: 9.0, y: 6.75, w: 4.0, h: 0.35,
-    fontSize: 10, color: COL_GREY, align: 'right',
+  addText(slide, em.contact_tel || '', {
+    x: 7, y: 6.4, w: 5.5, h: 0.4, fontSize: 12, color: COL_GREY,
   });
 }
 
@@ -343,27 +355,29 @@ function buildSlide22_Merci(slide, data, assetsDir) {
 
 const SLIDE_BUILDERS = [
   buildSlide01_Couverture,
-  buildSlide02_Intro,
-  buildSlide03_Enjeux,
-  buildSlide04_Solution,
-  buildSlide05_Methodologie,
-  buildSlide06_Objectifs,
+  buildSlide02_Sommaire,
+  buildSlide03_Presentation1,
+  buildSlide04_Presentation2,
+  buildSlide05_Approche,
+  buildSlide06_Comprehension,
   buildSlide07_Contexte,
   buildSlide08_Fonctionnalites,
-  buildSlide09_Processus,
+  buildSlide09_TitreAcquisition,
   buildSlide10_Acquisition,
-  buildSlide11_Engagement,
+  buildSlide11_TitrePlanAction,
   buildSlide12_PlanAction,
   buildSlide13_Equipe,
   buildSlide14_Technologies,
-  buildSlide15_Partenariat,
-  buildSlide16_Budget,
+  buildSlide15_TitreBudget,
+  buildSlide16_BudgetHeader,
   buildSlide17_Repartition,
-  buildSlide18_Garanties,
-  buildSlide19_Jalons,
-  buildSlide20_Facturation,
-  buildSlide21_ProchainesEtapes,
-  buildSlide22_Merci,
+  buildSlide18_Nouveau1,
+  buildSlide19_Nouveau2,
+  buildSlide20_PourquoiNousTitre,
+  buildSlide21_PourquoiNous,
+  buildSlide22_Annexes1,
+  buildSlide23_Annexes2,
+  buildSlide24_Merci,
 ];
 
 async function generatePptx(data, outputPath, assetsDir) {
@@ -371,9 +385,13 @@ async function generatePptx(data, outputPath, assetsDir) {
   pptx.defineLayout({ name: 'WIDE', width: SLIDE_W, height: SLIDE_H });
   pptx.layout = 'WIDE';
 
-  SLIDE_BUILDERS.forEach((builder) => {
-    const slide = pptx.addSlide();
-    builder(slide, data, assetsDir);
+  SLIDE_BUILDERS.forEach((builder, index) => {
+    if (index < 17) {
+      const slide = pptx.addSlide();
+      builder(slide, data, assetsDir);
+    } else {
+      builder(pptx, data, assetsDir);
+    }
   });
 
   await pptx.writeFile({ fileName: outputPath });
