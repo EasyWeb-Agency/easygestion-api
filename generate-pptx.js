@@ -21,9 +21,8 @@ const MW = 8.88;
 const Y_AT = 1.45;
 const COL2_L_W = 4.24;
 const COL2_R_X = 5.20;
-const COL3_W = 2.69;
-const COL3_X = [0.56, 3.65, 6.74];
-const GAP = 0.4;
+const LINE_SPACING = 16;
+const PARA_SPACE_AFTER = 8;
 
 const PPTX_OWN_SLIDE_INDICES = new Set([6, 7, 9, 11, 12, 13, 16]);
 
@@ -111,12 +110,13 @@ function buildSlide07_Contexte(pptx, data, assetsDir) {
   const ctx = data.sections?.contexte || {};
   addText(slide, stripMd(ctx.titre || ''), {
     x: MX, y: Y_AT, w: MW, h: 0.5,
-    fontSize: 17, bold: true, color: COL_WHITE, wrap: true, align: 'left',
+    fontSize: 18, bold: true, color: COL_WHITE, wrap: true,
+    lineSpacing: 22,
   });
-  const texte = stripMd(ctx.texte || '');
-  addText(slide, texte, {
+  addText(slide, stripMd(ctx.texte || ''), {
     x: MX, y: 2.05, w: MW, h: 1.7,
-    fontSize: 11, color: COL_WHITE, wrap: true, align: 'left',
+    fontSize: 11, color: COL_WHITE, wrap: true,
+    lineSpacing: LINE_SPACING,
   });
 }
 
@@ -124,25 +124,32 @@ function buildSlide08_Fonctionnalites(pptx, data, assetsDir) {
   const slide = pptx.addSlide();
   addBackground(slide, 8, assetsDir);
   const foncs = data.sections?.fonctionnalites || [];
-  const cols = [[foncs[0], foncs[1]], [foncs[2]]];
+  const colsData = [foncs.slice(0, 2), foncs.slice(2)];
   const xCols = [MX, COL2_R_X];
-  cols.forEach((groupe, ci) => {
-    let y = Y_AT + 0.1;
+  colsData.forEach((groupe, ci) => {
+    let y = 1.55;
     groupe.forEach((cat) => {
       if (!cat) return;
       addText(slide, `${stripMd(cat.categorie || '')} :`, {
         x: xCols[ci], y, w: COL2_L_W, h: 0.35,
         fontSize: 12, bold: true, color: COL_WHITE, wrap: true,
+        lineSpacing: 14,
       });
       y += 0.38;
-      (cat.items || []).slice(0, 4).forEach((it) => {
-        addText(slide, `• ${stripMd(it.titre || '')}`, {
-          x: xCols[ci], y, w: COL2_L_W, h: 0.3,
+      const bullets = (cat.items || []).slice(0, 4).map((it) => ({
+        text: stripMd(it.titre || ''),
+        options: {
+          bullet: true, fontSize: 11, color: COL_WHITE,
+          lineSpacing: LINE_SPACING, paraSpaceAfter: PARA_SPACE_AFTER,
+        },
+      }));
+      if (bullets.length) {
+        slide.addText(bullets, {
+          x: xCols[ci], y, w: COL2_L_W, h: bullets.length * 0.32 + 0.1,
           fontSize: 11, color: COL_WHITE, wrap: true,
         });
-        y += 0.3;
-      });
-      y += 0.2;
+        y += bullets.length * 0.32 + 0.2;
+      }
     });
   });
 }
@@ -155,14 +162,19 @@ function buildSlide10_Acquisition(pptx, data, assetsDir) {
   const slide = pptx.addSlide();
   addBackground(slide, 10, assetsDir);
   const acq = data.sections?.acquisition || [];
-  let y = 1.8;
-  acq.slice(0, 4).forEach((a) => {
-    addText(slide, `• ${stripMd(a.titre || '')} : ${stripMd(a.detail || '')}`, {
-      x: MX, y, w: COL2_L_W, h: 0.5,
+  const bullets = acq.slice(0, 5).map((a) => ({
+    text: stripMd(a.titre || '') + (a.detail ? ` : ${stripMd(a.detail)}` : ''),
+    options: {
+      bullet: true, fontSize: 11, color: COL_WHITE,
+      lineSpacing: LINE_SPACING, paraSpaceAfter: PARA_SPACE_AFTER,
+    },
+  }));
+  if (bullets.length) {
+    slide.addText(bullets, {
+      x: MX, y: 1.8, w: COL2_L_W, h: 3.5,
       fontSize: 11, color: COL_WHITE, wrap: true,
     });
-    y += 0.55;
-  });
+  }
 }
 
 function buildSlide11_TitrePlanAction(slide, data, assetsDir) {
@@ -174,25 +186,31 @@ function buildSlide12_PlanAction(pptx, data, assetsDir) {
   addBackground(slide, 12, assetsDir);
   const phases = data.sections?.plan_action || [];
   const positions = [
-    { x: MX, y: 1.9 },
-    { x: COL2_R_X, y: 1.9 },
-    { x: MX, y: 3.7 },
-    { x: COL2_R_X, y: 3.7 },
+    { x: MX, yTitre: 1.9, yBullets: 2.45 },
+    { x: COL2_R_X, yTitre: 1.9, yBullets: 2.45 },
+    { x: MX, yTitre: 3.7, yBullets: 4.25 },
+    { x: COL2_R_X, yTitre: 3.7, yBullets: 4.25 },
   ];
   phases.slice(0, 4).forEach((p, i) => {
-    const { x, y } = positions[i];
+    const pos = positions[i];
     addText(slide, stripMd(p.phase || ''), {
-      x, y, w: COL2_L_W, h: 0.45,
+      x: pos.x, y: pos.yTitre, w: COL2_L_W, h: 0.4,
       fontSize: 13, bold: true, color: COL_WHITE, wrap: true,
+      lineSpacing: 16,
     });
-    let ty = y + 0.5;
-    (p.taches || []).slice(0, 4).forEach((t) => {
-      addText(slide, `• ${stripMd(t)}`, {
-        x, y: ty, w: COL2_L_W, h: 0.3,
+    const bullets = (p.taches || []).slice(0, 5).map((t) => ({
+      text: stripMd(t),
+      options: {
+        bullet: true, fontSize: 11, color: COL_WHITE,
+        lineSpacing: LINE_SPACING, paraSpaceAfter: PARA_SPACE_AFTER,
+      },
+    }));
+    if (bullets.length) {
+      slide.addText(bullets, {
+        x: pos.x, y: pos.yBullets, w: COL2_L_W, h: 1.2,
         fontSize: 11, color: COL_WHITE, wrap: true,
       });
-      ty += 0.3;
-    });
+    }
   });
 }
 
@@ -202,22 +220,22 @@ function buildSlide13_Equipe(pptx, data, assetsDir) {
   const equipe = data.sections?.equipe || [];
   addText(slide, 'Une équipe expérimentée mobilisée tout au long du projet.', {
     x: MX, y: 1.5, w: 8.0, h: 0.4,
-    fontSize: 11, color: COL_WHITE, wrap: true,
+    fontSize: 11, color: COL_WHITE, wrap: true, lineSpacing: LINE_SPACING,
   });
-  const midPoint = Math.ceil(equipe.length / 2);
-  const cols = [equipe.slice(0, midPoint), equipe.slice(midPoint)];
-  const xCols = [MX, 3.90];
+  const mid = Math.ceil(equipe.length / 2);
+  const cols = [equipe.slice(0, mid), equipe.slice(mid)];
+  const xCols = [MX, COL2_R_X];
   cols.forEach((col, ci) => {
     let y = 2.55;
     col.forEach((e) => {
       addText(slide, `${stripMd(e.role || '')} :`, {
-        x: xCols[ci], y, w: 3.6, h: 0.3,
+        x: xCols[ci], y, w: 3.5, h: 0.3,
         fontSize: 11, bold: true, color: COL_WHITE, wrap: true,
       });
       y += 0.3;
       addText(slide, stripMd(e.expertise || ''), {
-        x: xCols[ci], y, w: 3.6, h: 0.35,
-        fontSize: 10, color: COL_WHITE, wrap: true,
+        x: xCols[ci], y, w: 3.5, h: 0.35,
+        fontSize: 10, color: COL_WHITE, wrap: true, lineSpacing: LINE_SPACING,
       });
       y += 0.45;
     });
@@ -228,8 +246,8 @@ function buildSlide14_Technologies(pptx, data, assetsDir) {
   const slide = pptx.addSlide();
   addBackground(slide, 14, assetsDir);
   const techs = data.sections?.technologies || [];
-  const midPoint = Math.ceil(techs.length / 2);
-  const cols = [techs.slice(0, midPoint), techs.slice(midPoint)];
+  const mid = Math.ceil(techs.length / 2);
+  const cols = [techs.slice(0, mid), techs.slice(mid)];
   const xCols = [MX, COL2_R_X];
   cols.forEach((col, ci) => {
     let y = 1.8;
@@ -241,7 +259,7 @@ function buildSlide14_Technologies(pptx, data, assetsDir) {
       y += 0.3;
       addText(slide, stripMd(t.detail || ''), {
         x: xCols[ci], y, w: COL2_L_W, h: 0.35,
-        fontSize: 10, color: COL_WHITE, wrap: true,
+        fontSize: 10, color: COL_WHITE, wrap: true, lineSpacing: LINE_SPACING,
       });
       y += 0.45;
     });
@@ -272,43 +290,66 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   addBackground(slide, 17, assetsDir);
   const modules = data.budget_detail?.modules || [];
   const tjm = data.projet?.tjm || 100;
+
+  const X_POLE = 0.56;
+  const W_POLE = 5.0;
+  const X_HRS = 5.6;
+  const W_HRS = 1.8;
+  const X_COUT = 7.5;
+  const W_COUT = 1.9;
+
+  const Y_HDR = 1.45;
   addText(slide, 'Pôles de développement', {
-    x: MX, y: 1.4, w: 3.6, h: 0.4, fontSize: 11, bold: true, color: COL_WHITE,
+    x: X_POLE, y: Y_HDR, w: W_POLE, h: 0.4,
+    fontSize: 11, bold: true, color: COL_WHITE, align: 'left',
   });
   addText(slide, 'Volume horaire', {
-    x: 4.2, y: 1.4, w: 2.5, h: 0.4, fontSize: 11, bold: true, color: COL_WHITE, align: 'center',
+    x: X_HRS, y: Y_HDR, w: W_HRS, h: 0.4,
+    fontSize: 11, bold: true, color: COL_WHITE, align: 'center',
   });
   addText(slide, `Coût total (TJM : ${tjm}€/h)`, {
-    x: 7.0, y: 1.4, w: 2.4, h: 0.4, fontSize: 11, bold: true, color: COL_WHITE, align: 'right',
+    x: X_COUT, y: Y_HDR, w: W_COUT, h: 0.4,
+    fontSize: 11, bold: true, color: COL_WHITE, align: 'right',
   });
+
+  const Y_START = 2.2;
+  const nb = modules.slice(0, 7).length;
+  const ROW_H = Math.min(0.62, (5.2 - Y_START) / (nb + 1));
 
   let totalH = 0;
   let totalEur = 0;
-  modules.slice(0, 5).forEach((m, i) => {
+  modules.slice(0, 7).forEach((m, i) => {
     const h = (m.items || []).reduce((s, it) => s + (it.heures || 0), 0);
     const eur = h * tjm;
     totalH += h;
     totalEur += eur;
-    const y = 2.2 + i * 0.7;
+    const y = Y_START + i * ROW_H;
     addText(slide, stripMd(m.titre || ''), {
-      x: MX, y, w: 3.6, h: 0.6, fontSize: 11, color: COL_WHITE, wrap: true, valign: 'middle',
+      x: X_POLE, y, w: W_POLE, h: ROW_H,
+      fontSize: 11, color: COL_WHITE, wrap: true, valign: 'middle',
     });
     addText(slide, `${h} h`, {
-      x: 4.2, y, w: 2.5, h: 0.6, fontSize: 11, color: COL_WHITE, align: 'center', valign: 'middle',
+      x: X_HRS, y, w: W_HRS, h: ROW_H,
+      fontSize: 11, color: COL_WHITE, align: 'center', valign: 'middle',
     });
     addText(slide, `${eur.toLocaleString('fr-FR')} €`, {
-      x: 7.0, y, w: 2.4, h: 0.6, fontSize: 11, color: COL_ACCENT, align: 'right', valign: 'middle',
+      x: X_COUT, y, w: W_COUT, h: ROW_H,
+      fontSize: 11, color: COL_ACCENT, align: 'right', valign: 'middle',
     });
   });
 
+  const Y_TOTAL = Y_START + nb * ROW_H + 0.15;
   addText(slide, 'TOTAL', {
-    x: MX, y: 5.0, w: 3.6, h: 0.5, fontSize: 12, bold: true, color: COL_WHITE,
+    x: X_POLE, y: Y_TOTAL, w: W_POLE, h: 0.5,
+    fontSize: 12, bold: true, color: COL_WHITE,
   });
   addText(slide, `${totalH} h`, {
-    x: 4.2, y: 5.0, w: 2.5, h: 0.5, fontSize: 12, bold: true, color: COL_WHITE, align: 'center',
+    x: X_HRS, y: Y_TOTAL, w: W_HRS, h: 0.5,
+    fontSize: 12, bold: true, color: COL_WHITE, align: 'center',
   });
   addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
-    x: 7.0, y: 5.0, w: 2.4, h: 0.5, fontSize: 12, bold: true, color: COL_WHITE, align: 'right',
+    x: X_COUT, y: Y_TOTAL, w: W_COUT, h: 0.5,
+    fontSize: 12, bold: true, color: COL_WHITE, align: 'right',
   });
 }
 
