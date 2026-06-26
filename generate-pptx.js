@@ -16,6 +16,17 @@ const COL_GREY = '555555';
 const COL_ACCENT = 'E0A040';
 const COL_WHITE = 'FFFFFF';
 
+const MX = 0.56;
+const MW = 8.88;
+const Y_AT = 1.45;
+const COL2_L_W = 4.24;
+const COL2_R_X = 5.20;
+const COL3_W = 2.69;
+const COL3_X = [0.56, 3.65, 6.74];
+const GAP = 0.4;
+
+const PPTX_OWN_SLIDE_INDICES = new Set([6, 7, 9, 11, 12, 13, 16]);
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function addBackground(slide, slideNum, assetsDir) {
@@ -58,10 +69,6 @@ function fmtEur(amount) {
   }).format(amount);
 }
 
-function moduleHours(mod) {
-  return (mod.items || []).reduce((sum, it) => sum + (it.heures || 0), 0);
-}
-
 // ─── Slides ───────────────────────────────────────────────────────────────────
 
 function buildSlide01_Couverture(slide, data, assetsDir) {
@@ -98,54 +105,44 @@ function buildSlide06_Comprehension(slide, data, assetsDir) {
   addBackground(slide, 6, assetsDir);
 }
 
-function buildSlide07_Contexte(slide, data, assetsDir) {
+function buildSlide07_Contexte(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 7, assetsDir);
-  const ctx = (data.sections && data.sections.contexte) || {};
-  addText(slide, stripMd(ctx.titre || 'Contexte actuel'), {
-    x: 0.8, y: 1.0, w: 11.5, h: 0.7,
-    fontSize: 20, bold: true,
+  const ctx = data.sections?.contexte || {};
+  addText(slide, stripMd(ctx.titre || ''), {
+    x: MX, y: Y_AT, w: MW, h: 0.5,
+    fontSize: 17, bold: true, color: COL_WHITE, wrap: true, align: 'left',
   });
-  if (ctx.texte) {
-    addText(slide, stripMd(ctx.texte), {
-      x: 0.8, y: 1.9, w: 11.5, h: 2.0,
-      fontSize: 12, color: COL_GREY, valign: 'top',
-    });
-  }
-  const bullets = (ctx.bullets || [])
-    .map((b) => `• ${stripMd(b)}`)
-    .join('\n');
-  if (bullets) {
-    addText(slide, bullets, {
-      x: 0.8, y: 4.1, w: 11.5, h: 2.8,
-      fontSize: 11, valign: 'top',
-    });
-  }
+  const texte = stripMd(ctx.texte || '');
+  addText(slide, texte, {
+    x: MX, y: 2.05, w: MW, h: 1.7,
+    fontSize: 11, color: COL_WHITE, wrap: true, align: 'left',
+  });
 }
 
-function buildSlide08_Fonctionnalites(slide, data, assetsDir) {
+function buildSlide08_Fonctionnalites(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 8, assetsDir);
-  const cats = (data.sections && data.sections.fonctionnalites) || [];
-  const COLS = 2;
-  const ROWS = 3;
-  const cellW = 6.0;
-  const cellH = 1.9;
-  const startX = 0.7;
-  const startY = 1.2;
-  const gapX = 0.5;
-
-  cats.slice(0, COLS * ROWS).forEach((cat, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
-    const x = startX + col * (cellW + gapX);
-    const y = startY + row * cellH;
-    const items = (cat.items || [])
-      .slice(0, 3)
-      .map((it) => `• ${stripMd(it.titre)}`)
-      .join('\n');
-    const text = `${stripMd(cat.categorie)}\n${items}`;
-    addText(slide, text, {
-      x, y, w: cellW, h: cellH - 0.1,
-      fontSize: 10, valign: 'top',
+  const foncs = data.sections?.fonctionnalites || [];
+  const cols = [[foncs[0], foncs[1]], [foncs[2]]];
+  const xCols = [MX, COL2_R_X];
+  cols.forEach((groupe, ci) => {
+    let y = Y_AT + 0.1;
+    groupe.forEach((cat) => {
+      if (!cat) return;
+      addText(slide, `${stripMd(cat.categorie || '')} :`, {
+        x: xCols[ci], y, w: COL2_L_W, h: 0.35,
+        fontSize: 12, bold: true, color: COL_WHITE, wrap: true,
+      });
+      y += 0.38;
+      (cat.items || []).slice(0, 4).forEach((it) => {
+        addText(slide, `• ${stripMd(it.titre || '')}`, {
+          x: xCols[ci], y, w: COL2_L_W, h: 0.3,
+          fontSize: 11, color: COL_WHITE, wrap: true,
+        });
+        y += 0.3;
+      });
+      y += 0.2;
     });
   });
 }
@@ -154,27 +151,17 @@ function buildSlide09_TitreAcquisition(slide, data, assetsDir) {
   addBackground(slide, 9, assetsDir);
 }
 
-function buildSlide10_Acquisition(slide, data, assetsDir) {
+function buildSlide10_Acquisition(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 10, assetsDir);
-  const items = (data.sections && data.sections.acquisition) || [];
-  const COLS = 2;
-  const ROWS = 3;
-  const cellW = 6.0;
-  const cellH = 1.9;
-  const startX = 0.7;
-  const startY = 1.2;
-  const gapX = 0.5;
-
-  items.slice(0, COLS * ROWS).forEach((item, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
-    const x = startX + col * (cellW + gapX);
-    const y = startY + row * cellH;
-    const text = `${stripMd(item.titre)}\n${stripMd(item.detail)}`;
-    addText(slide, text, {
-      x, y, w: cellW, h: cellH - 0.1,
-      fontSize: 10, valign: 'top',
+  const acq = data.sections?.acquisition || [];
+  let y = 1.8;
+  acq.slice(0, 4).forEach((a) => {
+    addText(slide, `• ${stripMd(a.titre || '')} : ${stripMd(a.detail || '')}`, {
+      x: MX, y, w: COL2_L_W, h: 0.5,
+      fontSize: 11, color: COL_WHITE, wrap: true,
     });
+    y += 0.55;
   });
 }
 
@@ -182,82 +169,81 @@ function buildSlide11_TitrePlanAction(slide, data, assetsDir) {
   addBackground(slide, 11, assetsDir);
 }
 
-function buildSlide12_PlanAction(slide, data, assetsDir) {
+function buildSlide12_PlanAction(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 12, assetsDir);
-  const phases = (data.sections && data.sections.plan_action) || [];
-  const COLS = 2;
-  const ROWS = 2;
-  const cellW = 6.0;
-  const cellH = 2.8;
-  const startX = 0.7;
-  const startY = 1.2;
-  const gapX = 0.5;
-
-  phases.slice(0, COLS * ROWS).forEach((phase, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
-    const x = startX + col * (cellW + gapX);
-    const y = startY + row * cellH;
-    const taches = (phase.taches || [])
-      .slice(0, 4)
-      .map((t) => `• ${stripMd(t)}`)
-      .join('\n');
-    const text = `${stripMd(phase.phase)}\n${taches}`;
-    addText(slide, text, {
-      x, y, w: cellW, h: cellH - 0.1,
-      fontSize: 10, valign: 'top',
+  const phases = data.sections?.plan_action || [];
+  const positions = [
+    { x: MX, y: 1.9 },
+    { x: COL2_R_X, y: 1.9 },
+    { x: MX, y: 3.7 },
+    { x: COL2_R_X, y: 3.7 },
+  ];
+  phases.slice(0, 4).forEach((p, i) => {
+    const { x, y } = positions[i];
+    addText(slide, stripMd(p.phase || ''), {
+      x, y, w: COL2_L_W, h: 0.45,
+      fontSize: 13, bold: true, color: COL_WHITE, wrap: true,
+    });
+    let ty = y + 0.5;
+    (p.taches || []).slice(0, 4).forEach((t) => {
+      addText(slide, `• ${stripMd(t)}`, {
+        x, y: ty, w: COL2_L_W, h: 0.3,
+        fontSize: 11, color: COL_WHITE, wrap: true,
+      });
+      ty += 0.3;
     });
   });
 }
 
-function buildSlide13_Equipe(slide, data, assetsDir) {
+function buildSlide13_Equipe(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 13, assetsDir);
-  const members = (data.sections && data.sections.equipe) || [];
-  const COLS = 3;
-  const ROWS = 2;
-  const cellW = 4.0;
-  const cellH = 2.5;
-  const startX = 0.5;
-  const startY = 1.3;
-  const gapX = 0.35;
-
-  members.slice(0, COLS * ROWS).forEach((m, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
-    const x = startX + col * (cellW + gapX);
-    const y = startY + row * cellH;
-    const text = [
-      stripMd(m.role),
-      `(${m.experience || ''})`,
-      stripMd(m.expertise),
-    ].filter(Boolean).join('\n');
-    addText(slide, text, {
-      x, y, w: cellW, h: cellH - 0.1,
-      fontSize: 9.5, valign: 'top',
+  const equipe = data.sections?.equipe || [];
+  addText(slide, 'Une équipe expérimentée mobilisée tout au long du projet.', {
+    x: MX, y: 1.5, w: 8.0, h: 0.4,
+    fontSize: 11, color: COL_WHITE, wrap: true,
+  });
+  const midPoint = Math.ceil(equipe.length / 2);
+  const cols = [equipe.slice(0, midPoint), equipe.slice(midPoint)];
+  const xCols = [MX, 3.90];
+  cols.forEach((col, ci) => {
+    let y = 2.55;
+    col.forEach((e) => {
+      addText(slide, `${stripMd(e.role || '')} :`, {
+        x: xCols[ci], y, w: 3.6, h: 0.3,
+        fontSize: 11, bold: true, color: COL_WHITE, wrap: true,
+      });
+      y += 0.3;
+      addText(slide, stripMd(e.expertise || ''), {
+        x: xCols[ci], y, w: 3.6, h: 0.35,
+        fontSize: 10, color: COL_WHITE, wrap: true,
+      });
+      y += 0.45;
     });
   });
 }
 
-function buildSlide14_Technologies(slide, data, assetsDir) {
+function buildSlide14_Technologies(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 14, assetsDir);
-  const techs = (data.sections && data.sections.technologies) || [];
-  const COLS = 2;
-  const ROWS = 3;
-  const cellW = 6.0;
-  const cellH = 1.9;
-  const startX = 0.7;
-  const startY = 1.2;
-  const gapX = 0.5;
-
-  techs.slice(0, COLS * ROWS).forEach((t, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
-    const x = startX + col * (cellW + gapX);
-    const y = startY + row * cellH;
-    const text = `${stripMd(t.categorie)}\n${stripMd(t.detail)}`;
-    addText(slide, text, {
-      x, y, w: cellW, h: cellH - 0.1,
-      fontSize: 10, valign: 'top',
+  const techs = data.sections?.technologies || [];
+  const midPoint = Math.ceil(techs.length / 2);
+  const cols = [techs.slice(0, midPoint), techs.slice(midPoint)];
+  const xCols = [MX, COL2_R_X];
+  cols.forEach((col, ci) => {
+    let y = 1.8;
+    col.forEach((t) => {
+      addText(slide, `${stripMd(t.categorie || '')} :`, {
+        x: xCols[ci], y, w: COL2_L_W, h: 0.3,
+        fontSize: 11, bold: true, color: COL_WHITE, wrap: true,
+      });
+      y += 0.3;
+      addText(slide, stripMd(t.detail || ''), {
+        x: xCols[ci], y, w: COL2_L_W, h: 0.35,
+        fontSize: 10, color: COL_WHITE, wrap: true,
+      });
+      y += 0.45;
     });
   });
 }
@@ -281,28 +267,48 @@ function buildSlide16_BudgetHeader(slide, data, assetsDir) {
   }
 }
 
-function buildSlide17_Repartition(slide, data, assetsDir) {
+function buildSlide17_Repartition(pptx, data, assetsDir) {
+  const slide = pptx.addSlide();
   addBackground(slide, 17, assetsDir);
-  const projet = data.projet || {};
-  const tjm = projet.tjm || 100;
-  const modules = (data.budget_detail && data.budget_detail.modules) || [];
-  const startY = 1.5;
-  const lineH = 0.85;
+  const modules = data.budget_detail?.modules || [];
+  const tjm = data.projet?.tjm || 100;
+  addText(slide, 'Pôles de développement', {
+    x: MX, y: 1.4, w: 3.6, h: 0.4, fontSize: 11, bold: true, color: COL_WHITE,
+  });
+  addText(slide, 'Volume horaire', {
+    x: 4.2, y: 1.4, w: 2.5, h: 0.4, fontSize: 11, bold: true, color: COL_WHITE, align: 'center',
+  });
+  addText(slide, `Coût total (TJM : ${tjm}€/h)`, {
+    x: 7.0, y: 1.4, w: 2.4, h: 0.4, fontSize: 11, bold: true, color: COL_WHITE, align: 'right',
+  });
 
-  modules.slice(0, 5).forEach((mod, i) => {
-    const heures = moduleHours(mod);
-    const montant = heures * tjm;
-    const y = startY + i * lineH;
-    addText(slide, stripMd(mod.titre), {
-      x: 0.8, y, w: 7.0, h: lineH, fontSize: 12,
+  let totalH = 0;
+  let totalEur = 0;
+  modules.slice(0, 5).forEach((m, i) => {
+    const h = (m.items || []).reduce((s, it) => s + (it.heures || 0), 0);
+    const eur = h * tjm;
+    totalH += h;
+    totalEur += eur;
+    const y = 2.2 + i * 0.7;
+    addText(slide, stripMd(m.titre || ''), {
+      x: MX, y, w: 3.6, h: 0.6, fontSize: 11, color: COL_WHITE, wrap: true, valign: 'middle',
     });
-    addText(slide, `${heures} h`, {
-      x: 8.0, y, w: 2.0, h: lineH, fontSize: 12, align: 'right',
+    addText(slide, `${h} h`, {
+      x: 4.2, y, w: 2.5, h: 0.6, fontSize: 11, color: COL_WHITE, align: 'center', valign: 'middle',
     });
-    addText(slide, fmtEur(montant), {
-      x: 10.2, y, w: 2.5, h: lineH,
-      fontSize: 12, bold: true, align: 'right', color: COL_ACCENT,
+    addText(slide, `${eur.toLocaleString('fr-FR')} €`, {
+      x: 7.0, y, w: 2.4, h: 0.6, fontSize: 11, color: COL_ACCENT, align: 'right', valign: 'middle',
     });
+  });
+
+  addText(slide, 'TOTAL', {
+    x: MX, y: 5.0, w: 3.6, h: 0.5, fontSize: 12, bold: true, color: COL_WHITE,
+  });
+  addText(slide, `${totalH} h`, {
+    x: 4.2, y: 5.0, w: 2.5, h: 0.5, fontSize: 12, bold: true, color: COL_WHITE, align: 'center',
+  });
+  addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
+    x: 7.0, y: 5.0, w: 2.4, h: 0.5, fontSize: 12, bold: true, color: COL_WHITE, align: 'right',
   });
 }
 
@@ -386,11 +392,11 @@ async function generatePptx(data, outputPath, assetsDir) {
   pptx.layout = 'WIDE';
 
   SLIDE_BUILDERS.forEach((builder, index) => {
-    if (index < 17) {
+    if (index >= 17 || PPTX_OWN_SLIDE_INDICES.has(index)) {
+      builder(pptx, data, assetsDir);
+    } else {
       const slide = pptx.addSlide();
       builder(slide, data, assetsDir);
-    } else {
-      builder(pptx, data, assetsDir);
     }
   });
 
