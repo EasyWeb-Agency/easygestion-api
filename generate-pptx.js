@@ -312,11 +312,15 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   const tjm = data.projet?.tjm || 100;
 
   const TABLE_X = MX;
-  const TABLE_W = MW;
+  const TABLE_W = SLIDE_W - 2 * MX;
 
-  const COL_POLE = { x: TABLE_X, w: 5.0, align: 'left' };
-  const COL_VOL = { x: 6.2, w: 1.6, align: 'center' };
-  const COL_COUT = { x: 8.0, w: TABLE_X + TABLE_W - 8.0, align: 'right' };
+  const COL_POLE_W = TABLE_W * 0.62;
+  const COL_VOL_W = TABLE_W * 0.18;
+  const COL_COUT_W = TABLE_W - COL_POLE_W - COL_VOL_W;
+
+  const COL_POLE = { x: TABLE_X, w: COL_POLE_W, align: 'left' };
+  const COL_VOL = { x: TABLE_X + COL_POLE_W, w: COL_VOL_W, align: 'center' };
+  const COL_COUT = { x: TABLE_X + COL_POLE_W + COL_VOL_W, w: COL_COUT_W, align: 'right' };
 
   const Y_HEAD = 1.55;
   const Y_LIGNE = 1.95;
