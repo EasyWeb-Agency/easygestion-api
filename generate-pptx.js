@@ -311,36 +311,43 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   const modules = data.budget_detail?.modules || [];
   const tjm = data.projet?.tjm || 100;
 
-  const COL_POLE = { x: 0.56, w: 4.6, align: 'left' };
-  const COL_VOL = { x: 5.0, w: 2.0, align: 'center' };
-  const COL_COUT = { x: 6.9, w: 2.5, align: 'center' };
+  const TABLE_X = MX;
+  const TABLE_W = MW;
+
+  const COL_POLE = { x: TABLE_X, w: 5.0, align: 'left' };
+  const COL_VOL = { x: 6.2, w: 1.6, align: 'center' };
+  const COL_COUT = { x: 8.0, w: TABLE_X + TABLE_W - 8.0, align: 'right' };
 
   const Y_HEAD = 1.55;
   const Y_LIGNE = 1.95;
   const Y_START = 2.35;
-  const ROW_H = 0.58;
-  const y_total = Y_START + 4 * ROW_H + 0.45;
+  const ROW_H = 0.70;
+  const Y_AFTER_DATA = Y_START + 5 * ROW_H;
+  const Y_SEP_TOTAL = Y_AFTER_DATA + 0.30;
+  const Y_TOTAL = Y_SEP_TOTAL + 0.30;
 
-  addText(slide, 'Pôles de développement', {
-    x: COL_POLE.x, y: Y_HEAD, w: COL_POLE.w, h: 0.4,
+  const headerOpts = {
     fontSize: 13, bold: true, color: COL_WHITE,
-    align: 'left', wrap: false, autoFit: false,
+    wrap: false, autoFit: false, h: 0.4,
+  };
+  addText(slide, 'Pôles de développement', {
+    ...headerOpts, x: COL_POLE.x, y: Y_HEAD, w: COL_POLE.w, align: 'left',
   });
   addText(slide, 'Volume horaire', {
-    x: COL_VOL.x, y: Y_HEAD, w: COL_VOL.w, h: 0.4,
-    fontSize: 13, bold: true, color: COL_WHITE,
-    align: 'center', wrap: false, autoFit: false,
+    ...headerOpts, x: COL_VOL.x, y: Y_HEAD, w: COL_VOL.w, align: 'center',
   });
   addText(slide, 'Coût total (TJM : 100/h)', {
-    x: COL_COUT.x, y: Y_HEAD, w: COL_COUT.w, h: 0.4,
-    fontSize: 13, bold: true, color: COL_WHITE,
-    align: 'center', wrap: false, autoFit: false,
+    ...headerOpts, x: COL_COUT.x, y: Y_HEAD, w: COL_COUT.w, align: 'right',
   });
 
-  slide.addShape(pptx.ShapeType.line, {
-    x: 0.56, y: Y_LIGNE, w: 8.88, h: 0,
-    line: { color: 'AAAAAA', width: 0.5 },
-  });
+  const addRowLine = (y, light = true) => {
+    slide.addShape(pptx.ShapeType.line, {
+      x: TABLE_X, y, w: TABLE_W, h: 0,
+      line: { color: light ? 'AAAAAA' : '666666', width: light ? 0.5 : 0.3 },
+    });
+  };
+
+  addRowLine(Y_LIGNE);
 
   const cinqModules = modules.slice(0, 5);
   let totalH = 0;
@@ -366,37 +373,29 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
     addText(slide, `${eur.toLocaleString('fr-FR')} €`, {
       x: COL_COUT.x, y, w: COL_COUT.w, h: ROW_H,
       fontSize: 13, color: COL_WHITE,
-      valign: 'middle', align: 'center', autoFit: false,
+      valign: 'middle', align: 'right', autoFit: false,
     });
 
-    // Séparateur entre lignes i et i+1 uniquement (pas après la 5e)
-    if (i < 3) {
-      slide.addShape(pptx.ShapeType.line, {
-        x: 0.56, y: y + ROW_H, w: 8.88, h: 0,
-        line: { color: '666666', width: 0.3 },
-      });
+    // Trait sous la ligne i, entre les lignes de données (pas après la 5e)
+    if (i < cinqModules.length - 1) {
+      addRowLine(Y_START + (i + 1) * ROW_H, false);
     }
   });
 
-  slide.addShape(pptx.ShapeType.line, {
-    x: 0.56, y: y_total - 0.2, w: 8.88, h: 0,
-    line: { color: 'AAAAAA', width: 0.5 },
-  });
+  addRowLine(Y_SEP_TOTAL);
 
-  addText(slide, 'TOTAL', {
-    x: COL_POLE.x, y: y_total, w: COL_POLE.w, h: 0.5,
+  const totalOpts = {
     fontSize: 13, bold: true, color: COL_WHITE,
-    align: 'left', valign: 'middle', autoFit: false,
+    valign: 'middle', autoFit: false, h: 0.5,
+  };
+  addText(slide, 'TOTAL', {
+    ...totalOpts, x: COL_POLE.x, y: Y_TOTAL, w: COL_POLE.w, align: 'left',
   });
   addText(slide, `${totalH} h`, {
-    x: COL_VOL.x, y: y_total, w: COL_VOL.w, h: 0.5,
-    fontSize: 13, bold: true, color: COL_WHITE,
-    align: 'center', valign: 'middle', autoFit: false,
+    ...totalOpts, x: COL_VOL.x, y: Y_TOTAL, w: COL_VOL.w, align: 'center',
   });
   addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
-    x: COL_COUT.x, y: y_total, w: COL_COUT.w, h: 0.5,
-    fontSize: 13, bold: true, color: COL_WHITE,
-    align: 'center', valign: 'middle', autoFit: false,
+    ...totalOpts, x: COL_COUT.x, y: Y_TOTAL, w: COL_COUT.w, align: 'right',
   });
 }
 
