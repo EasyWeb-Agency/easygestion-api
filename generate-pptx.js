@@ -132,20 +132,21 @@ function buildSlide08_Fonctionnalites(pptx, data, assetsDir) {
     const paragraphs = [];
     groupe.forEach((cat, gi) => {
       if (!cat) return;
-      if (gi > 0) paragraphs.push({ text: '', options: { fontSize: 8 } });
+      if (gi > 0) paragraphs.push({ text: '', options: { breakLine: true, fontSize: 8 } });
       paragraphs.push({
         text: `${stripMd(cat.categorie || '')} :`,
         options: {
-          bold: true, fontSize: 18, color: COL_WHITE, lineSpacing: 24,
-          paraSpaceBefore: 11, paraSpaceAfter: 6,
+          bold: true, fontSize: 18, color: COL_WHITE,
+          lineSpacing: 19, paraSpaceBefore: gi > 0 ? 11 : 0,
+          paraSpaceAfter: 6, breakLine: true,
         },
       });
       (cat.items || []).slice(0, 4).forEach((it) => {
         paragraphs.push({
-          text: stripMd(it.titre || ''),
+          text: `• ${stripMd(it.titre || '')}`,
           options: {
-            bullet: true, fontSize: 15, color: COL_WHITE,
-            lineSpacing: 19, paraSpaceAfter: 9,
+            fontSize: 15, color: COL_WHITE,
+            lineSpacing: 19, paraSpaceAfter: 9, breakLine: true,
           },
         });
       });
@@ -153,7 +154,7 @@ function buildSlide08_Fonctionnalites(pptx, data, assetsDir) {
     if (paragraphs.length) {
       slide.addText(paragraphs, {
         x: xCols[ci], y: 1.55, w: COL2_L_W, h: 3.8,
-        autoFit: false, wrap: true,
+        autoFit: false, wrap: true, valign: 'top',
       });
     }
   });
@@ -167,17 +168,17 @@ function buildSlide10_Acquisition(pptx, data, assetsDir) {
   const slide = pptx.addSlide();
   addBackground(slide, 10, assetsDir);
   const acq = data.sections?.acquisition || [];
-  const bullets = acq.slice(0, 5).map((a) => ({
-    text: stripMd(a.titre || '') + (a.detail ? ` : ${stripMd(a.detail)}` : ''),
+  const paragraphs = acq.slice(0, 5).map((a) => ({
+    text: `• ${stripMd(a.titre || '')}${a.detail ? ` : ${stripMd(a.detail)}` : ''}`,
     options: {
-      bullet: true, fontSize: 15, color: COL_WHITE,
-      lineSpacing: 19, paraSpaceAfter: 9,
+      fontSize: 15, color: COL_WHITE,
+      lineSpacing: 19, paraSpaceAfter: 9, breakLine: true,
     },
   }));
-  if (bullets.length) {
-    slide.addText(bullets, {
+  if (paragraphs.length) {
+    slide.addText(paragraphs, {
       x: MX, y: 1.8, w: COL2_L_W, h: 3.5,
-      autoFit: false, wrap: true,
+      autoFit: false, wrap: true, valign: 'top',
     });
   }
 }
@@ -191,36 +192,36 @@ function buildSlide12_PlanAction(pptx, data, assetsDir) {
   addBackground(slide, 12, assetsDir);
   const phases = data.sections?.plan_action || [];
 
-  const col1Phases = [phases[0], phases[2]].filter(Boolean);
-  const col2Phases = [phases[1], phases[3]].filter(Boolean);
+  const positions = [
+    { x: MX, y: 1.6, w: COL2_L_W },
+    { x: COL2_R_X, y: 1.6, w: COL2_L_W },
+    { x: MX, y: 3.7, w: COL2_L_W },
+    { x: COL2_R_X, y: 3.7, w: COL2_L_W },
+  ];
 
-  [[col1Phases, MX], [col2Phases, COL2_R_X]].forEach(([colPhases, x]) => {
+  phases.slice(0, 4).forEach((p, i) => {
+    const pos = positions[i];
     const paragraphs = [];
-    colPhases.forEach((p, pi) => {
-      if (pi > 0) paragraphs.push({ text: '', options: { fontSize: 8 } });
+    paragraphs.push({
+      text: stripMd(p.phase || ''),
+      options: {
+        bold: true, fontSize: 15, color: COL_WHITE,
+        lineSpacing: 19, paraSpaceAfter: 8, breakLine: true,
+      },
+    });
+    (p.taches || []).slice(0, 4).forEach((t) => {
       paragraphs.push({
-        text: stripMd(p.phase || ''),
+        text: `• ${stripMd(t)}`,
         options: {
-          bold: true, fontSize: 18, color: COL_WHITE,
-          lineSpacing: 19, paraSpaceAfter: 8,
+          fontSize: 14, color: COL_WHITE,
+          lineSpacing: 19, paraSpaceAfter: 9, breakLine: true,
         },
       });
-      (p.taches || []).slice(0, 5).forEach((t) => {
-        paragraphs.push({
-          text: stripMd(t),
-          options: {
-            bullet: true, fontSize: 15, color: COL_WHITE,
-            lineSpacing: 19, paraSpaceAfter: 8,
-          },
-        });
-      });
     });
-    if (paragraphs.length) {
-      slide.addText(paragraphs, {
-        x, y: 1.6, w: COL2_L_W, h: 3.7,
-        autoFit: false, wrap: true,
-      });
-    }
+    slide.addText(paragraphs, {
+      x: pos.x, y: pos.y, w: pos.w, h: 1.8,
+      autoFit: false, wrap: true, valign: 'top',
+    });
   });
 }
 
@@ -237,28 +238,27 @@ function buildSlide13_Equipe(pptx, data, assetsDir) {
   const xCols = [MX, COL2_R_X];
   cols.forEach((col, ci) => {
     const paragraphs = [];
-    col.forEach((e) => {
+    col.forEach((e, ei) => {
+      if (ei > 0) paragraphs.push({ text: '', options: { breakLine: true, fontSize: 6 } });
       paragraphs.push({
         text: `${stripMd(e.role || '')} :`,
         options: {
           bold: true, fontSize: 18, color: COL_WHITE,
-          lineSpacing: 19, paraSpaceAfter: 4,
+          lineSpacing: 19, paraSpaceAfter: 4, breakLine: true,
         },
       });
       paragraphs.push({
         text: stripMd(e.expertise || ''),
         options: {
           fontSize: 15, color: COL_WHITE,
-          lineSpacing: 19, paraSpaceAfter: 10,
+          lineSpacing: 19, paraSpaceAfter: 9, breakLine: true,
         },
       });
     });
-    if (paragraphs.length) {
-      slide.addText(paragraphs, {
-        x: xCols[ci], y: 2.55, w: 3.5, h: 3.0,
-        autoFit: false, wrap: true,
-      });
-    }
+    slide.addText(paragraphs, {
+      x: xCols[ci], y: 2.55, w: 3.5, h: 3.0,
+      autoFit: false, wrap: true, valign: 'top',
+    });
   });
 }
 
@@ -275,24 +275,24 @@ function buildSlide14_Technologies(pptx, data, assetsDir) {
       paragraphs.push({
         text: `${stripMd(t.categorie || '')} :`,
         options: {
-          bold: true, fontSize: 18, color: COL_WHITE, lineSpacing: 19,
-          paraSpaceBefore: ti > 0 ? 12 : 0, paraSpaceAfter: 4,
+          bold: true, fontSize: 18, color: COL_WHITE,
+          lineSpacing: 19,
+          paraSpaceBefore: ti > 0 ? 11 : 0,
+          paraSpaceAfter: 4, breakLine: true,
         },
       });
       paragraphs.push({
         text: stripMd(t.detail || ''),
         options: {
           fontSize: 15, color: COL_WHITE,
-          lineSpacing: 19, paraSpaceAfter: 8,
+          lineSpacing: 19, paraSpaceAfter: 9, breakLine: true,
         },
       });
     });
-    if (paragraphs.length) {
-      slide.addText(paragraphs, {
-        x: xCols[ci], y: 1.6, w: COL2_L_W, h: 3.8,
-        autoFit: false, wrap: true,
-      });
-    }
+    slide.addText(paragraphs, {
+      x: xCols[ci], y: 1.6, w: COL2_L_W, h: 3.8,
+      autoFit: false, wrap: true, valign: 'top',
+    });
   });
 }
 
@@ -323,52 +323,54 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   const tjm = data.projet?.tjm || 100;
 
   const X_POLE = 0.56;
-  const W_POLE = 4.5;
-  const X_HRS = 5.4;
-  const W_HRS = 1.8;
-  const X_COUT = 7.3;
-  const W_COUT = 2.1;
+  const W_POLE = 3.8;
+  const X_HRS = 4.6;
+  const W_HRS = 2.0;
+  const X_COUT = 7.2;
+  const W_COUT = 2.2;
 
-  const Y_LIGNES = [2.05, 2.72, 3.39, 4.06, 4.73];
-  const Y_TOTAL = 5.25;
-  const ROW_H = 0.55;
+  const Y_START = 1.90;
+  const Y_TOTAL_FOND = 5.10;
+  const ROW_H = (Y_TOTAL_FOND - Y_START) / 6;
 
   const cinqModules = modules.slice(0, 5);
-
   let totalH = 0;
   let totalEur = 0;
+
   cinqModules.forEach((m, i) => {
     const h = (m.items || []).reduce((s, it) => s + (it.heures || 0), 0);
     const eur = h * tjm;
     totalH += h;
     totalEur += eur;
-    const y = Y_LIGNES[i];
+
+    const y = Y_START + (i + 0.5) * ROW_H - 0.15;
 
     addText(slide, stripMd(m.titre || ''), {
-      x: X_POLE, y, w: W_POLE, h: ROW_H,
-      fontSize: 15, color: COL_WHITE, wrap: true,
+      x: X_POLE, y, w: W_POLE, h: ROW_H * 0.8,
+      fontSize: 14, color: COL_WHITE, wrap: true,
       valign: 'middle', align: 'left', autoFit: false,
     });
     addText(slide, `${h} h`, {
-      x: X_HRS, y, w: W_HRS, h: ROW_H,
-      fontSize: 15, color: COL_WHITE,
+      x: X_HRS, y, w: W_HRS, h: ROW_H * 0.8,
+      fontSize: 14, color: COL_WHITE,
       valign: 'middle', align: 'center', autoFit: false,
     });
     addText(slide, `${eur.toLocaleString('fr-FR')} €`, {
-      x: X_COUT, y, w: W_COUT, h: ROW_H,
-      fontSize: 15, color: COL_WHITE,
+      x: X_COUT, y, w: W_COUT, h: ROW_H * 0.8,
+      fontSize: 14, color: COL_WHITE,
       valign: 'middle', align: 'right', autoFit: false,
     });
   });
 
+  const Y_TOT = Y_TOTAL_FOND - 0.1;
   addText(slide, `${totalH} h`, {
-    x: X_HRS, y: Y_TOTAL, w: W_HRS, h: ROW_H,
-    fontSize: 15, bold: true, color: COL_WHITE,
+    x: X_HRS, y: Y_TOT, w: W_HRS, h: 0.5,
+    fontSize: 14, bold: true, color: COL_WHITE,
     valign: 'middle', align: 'center', autoFit: false,
   });
   addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
-    x: X_COUT, y: Y_TOTAL, w: W_COUT, h: ROW_H,
-    fontSize: 15, bold: true, color: COL_WHITE,
+    x: X_COUT, y: Y_TOT, w: W_COUT, h: 0.5,
+    fontSize: 14, bold: true, color: COL_WHITE,
     valign: 'middle', align: 'right', autoFit: false,
   });
 }
