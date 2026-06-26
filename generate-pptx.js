@@ -129,26 +129,33 @@ function buildSlide08_Fonctionnalites(pptx, data, assetsDir) {
   const colsData = [foncs.slice(0, 2), foncs.slice(2)];
   const xCols = [MX, COL2_R_X];
   colsData.forEach((groupe, ci) => {
-    let y = 1.55;
-    groupe.forEach((cat) => {
+    const paragraphs = [];
+    groupe.forEach((cat, gi) => {
       if (!cat) return;
-      addText(slide, `${stripMd(cat.categorie || '')} :`, {
-        x: xCols[ci], y, w: COL2_L_W, h: 0.4,
-        fontSize: 15, bold: true, lineSpacing: 19, color: COL_WHITE, wrap: true, autoFit: false,
+      if (gi > 0) paragraphs.push({ text: '', options: { fontSize: 8 } });
+      paragraphs.push({
+        text: `${stripMd(cat.categorie || '')} :`,
+        options: {
+          bold: true, fontSize: 20, color: COL_WHITE, lineSpacing: 24,
+          paraSpaceBefore: 14, paraSpaceAfter: 6,
+        },
       });
-      y += 0.45;
-      const bullets = (cat.items || []).slice(0, 4).map((it) => ({
-        text: stripMd(it.titre || ''),
-        options: { bullet: true, fontSize: 14, color: COL_WHITE, lineSpacing: 20, paraSpaceAfter: 10 },
-      }));
-      if (bullets.length) {
-        slide.addText(bullets, {
-          x: xCols[ci], y, w: COL2_L_W, h: bullets.length * 0.42 + 0.1,
-          autoFit: false, wrap: true,
+      (cat.items || []).slice(0, 4).forEach((it) => {
+        paragraphs.push({
+          text: stripMd(it.titre || ''),
+          options: {
+            bullet: true, fontSize: 16, color: COL_WHITE,
+            lineSpacing: 22, paraSpaceAfter: 12,
+          },
         });
-        y += bullets.length * 0.42 + 0.2;
-      }
+      });
     });
+    if (paragraphs.length) {
+      slide.addText(paragraphs, {
+        x: xCols[ci], y: 1.55, w: COL2_L_W, h: 3.8,
+        autoFit: false, wrap: true,
+      });
+    }
   });
 }
 
@@ -162,7 +169,10 @@ function buildSlide10_Acquisition(pptx, data, assetsDir) {
   const acq = data.sections?.acquisition || [];
   const bullets = acq.slice(0, 5).map((a) => ({
     text: stripMd(a.titre || '') + (a.detail ? ` : ${stripMd(a.detail)}` : ''),
-    options: { bullet: true, fontSize: 14, color: COL_WHITE, lineSpacing: 20, paraSpaceAfter: 10 },
+    options: {
+      bullet: true, fontSize: 16, color: COL_WHITE,
+      lineSpacing: 22, paraSpaceAfter: 12,
+    },
   }));
   if (bullets.length) {
     slide.addText(bullets, {
@@ -180,25 +190,34 @@ function buildSlide12_PlanAction(pptx, data, assetsDir) {
   const slide = pptx.addSlide();
   addBackground(slide, 12, assetsDir);
   const phases = data.sections?.plan_action || [];
-  const positions = [
-    { x: MX, yTitre: 1.9, yBullets: 2.45 },
-    { x: COL2_R_X, yTitre: 1.9, yBullets: 2.45 },
-    { x: MX, yTitre: 3.6, yBullets: 4.15 },
-    { x: COL2_R_X, yTitre: 3.6, yBullets: 4.15 },
-  ];
-  phases.slice(0, 4).forEach((p, i) => {
-    const pos = positions[i];
-    addText(slide, stripMd(p.phase || ''), {
-      x: pos.x, y: pos.yTitre, w: COL2_L_W, h: 0.45,
-      fontSize: 15, bold: true, lineSpacing: 19, color: COL_WHITE, wrap: true, autoFit: false,
+
+  const col1Phases = [phases[0], phases[2]].filter(Boolean);
+  const col2Phases = [phases[1], phases[3]].filter(Boolean);
+
+  [[col1Phases, MX], [col2Phases, COL2_R_X]].forEach(([colPhases, x]) => {
+    const paragraphs = [];
+    colPhases.forEach((p, pi) => {
+      if (pi > 0) paragraphs.push({ text: '', options: { fontSize: 8 } });
+      paragraphs.push({
+        text: stripMd(p.phase || ''),
+        options: {
+          bold: true, fontSize: 18, color: COL_WHITE,
+          lineSpacing: 22, paraSpaceAfter: 8,
+        },
+      });
+      (p.taches || []).slice(0, 5).forEach((t) => {
+        paragraphs.push({
+          text: stripMd(t),
+          options: {
+            bullet: true, fontSize: 16, color: COL_WHITE,
+            lineSpacing: 22, paraSpaceAfter: 8,
+          },
+        });
+      });
     });
-    const bullets = (p.taches || []).slice(0, 5).map((t) => ({
-      text: stripMd(t),
-      options: { bullet: true, fontSize: 14, color: COL_WHITE, lineSpacing: 20, paraSpaceAfter: 10 },
-    }));
-    if (bullets.length) {
-      slide.addText(bullets, {
-        x: pos.x, y: pos.yBullets, w: COL2_L_W, h: 1.3,
+    if (paragraphs.length) {
+      slide.addText(paragraphs, {
+        x, y: 1.6, w: COL2_L_W, h: 3.7,
         autoFit: false, wrap: true,
       });
     }
@@ -210,26 +229,36 @@ function buildSlide13_Equipe(pptx, data, assetsDir) {
   addBackground(slide, 13, assetsDir);
   const equipe = data.sections?.equipe || [];
   addText(slide, 'Une équipe expérimentée mobilisée tout au long du projet.', {
-    x: MX, y: 1.5, w: 8.0, h: 0.45,
-    fontSize: 14, lineSpacing: 20, color: COL_WHITE, wrap: true, autoFit: false,
+    x: MX, y: 1.5, w: 8.0, h: 0.5,
+    fontSize: 16, lineSpacing: 22, color: COL_WHITE, wrap: true, autoFit: false,
   });
   const mid = Math.ceil(equipe.length / 2);
   const cols = [equipe.slice(0, mid), equipe.slice(mid)];
   const xCols = [MX, COL2_R_X];
   cols.forEach((col, ci) => {
-    let y = 2.55;
+    const paragraphs = [];
     col.forEach((e) => {
-      addText(slide, `${stripMd(e.role || '')} :`, {
-        x: xCols[ci], y, w: 3.5, h: 0.35,
-        fontSize: 14, bold: true, lineSpacing: 20, color: COL_WHITE, wrap: true, autoFit: false,
+      paragraphs.push({
+        text: `${stripMd(e.role || '')} :`,
+        options: {
+          bold: true, fontSize: 18, color: COL_WHITE,
+          lineSpacing: 22, paraSpaceAfter: 4,
+        },
       });
-      y += 0.38;
-      addText(slide, stripMd(e.expertise || ''), {
-        x: xCols[ci], y, w: 3.5, h: 0.4,
-        fontSize: 13, lineSpacing: 18, color: COL_WHITE, wrap: true, autoFit: false,
+      paragraphs.push({
+        text: stripMd(e.expertise || ''),
+        options: {
+          fontSize: 16, color: COL_WHITE,
+          lineSpacing: 22, paraSpaceAfter: 10,
+        },
       });
-      y += 0.5;
     });
+    if (paragraphs.length) {
+      slide.addText(paragraphs, {
+        x: xCols[ci], y: 2.55, w: 3.5, h: 3.0,
+        autoFit: false, wrap: true,
+      });
+    }
   });
 }
 
@@ -241,19 +270,29 @@ function buildSlide14_Technologies(pptx, data, assetsDir) {
   const cols = [techs.slice(0, mid), techs.slice(mid)];
   const xCols = [MX, COL2_R_X];
   cols.forEach((col, ci) => {
-    let y = 1.8;
-    col.forEach((t) => {
-      addText(slide, `${stripMd(t.categorie || '')} :`, {
-        x: xCols[ci], y, w: COL2_L_W, h: 0.35,
-        fontSize: 14, bold: true, lineSpacing: 20, color: COL_WHITE, wrap: true, autoFit: false,
+    const paragraphs = [];
+    col.forEach((t, ti) => {
+      paragraphs.push({
+        text: `${stripMd(t.categorie || '')} :`,
+        options: {
+          bold: true, fontSize: 18, color: COL_WHITE, lineSpacing: 22,
+          paraSpaceBefore: ti > 0 ? 12 : 0, paraSpaceAfter: 4,
+        },
       });
-      y += 0.38;
-      addText(slide, stripMd(t.detail || ''), {
-        x: xCols[ci], y, w: COL2_L_W, h: 0.4,
-        fontSize: 13, lineSpacing: 18, color: COL_WHITE, wrap: true, autoFit: false,
+      paragraphs.push({
+        text: stripMd(t.detail || ''),
+        options: {
+          fontSize: 16, color: COL_WHITE,
+          lineSpacing: 22, paraSpaceAfter: 8,
+        },
       });
-      y += 0.5;
     });
+    if (paragraphs.length) {
+      slide.addText(paragraphs, {
+        x: xCols[ci], y: 1.6, w: COL2_L_W, h: 3.8,
+        autoFit: false, wrap: true,
+      });
+    }
   });
 }
 
