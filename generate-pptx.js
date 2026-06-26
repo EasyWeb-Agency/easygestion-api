@@ -302,17 +302,6 @@ function buildSlide15_TitreBudget(slide, data, assetsDir) {
 
 function buildSlide16_BudgetHeader(slide, data, assetsDir) {
   addBackground(slide, 16, assetsDir);
-  const projet = data.projet || {};
-  addText(slide, `${fmtEur(projet.budget || 0)} HT`, {
-    x: 0.5, y: 5.5, w: SLIDE_W - 1, h: 1.0,
-    fontSize: 36, bold: true, color: COL_ACCENT, align: 'center',
-  });
-  if (projet.duree_mois) {
-    addText(slide, `${projet.duree_mois} mois`, {
-      x: 0.5, y: 6.3, w: SLIDE_W - 1, h: 0.5,
-      fontSize: 16, color: COL_GREY, align: 'center',
-    });
-  }
 }
 
 function buildSlide17_Repartition(pptx, data, assetsDir) {
@@ -328,9 +317,9 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
 
   const Y_HEAD = 1.55;
   const Y_LIGNE = 1.95;
-  const Y_START = 2.2;
-  const ROW_H = 0.62;
-  const Y_TOTAL = 5.15;
+  const Y_START = 2.35;
+  const ROW_H = 0.58;
+  const y_total = Y_START + 4 * ROW_H + 0.45;
 
   addText(slide, 'Pôles de développement', {
     x: COL_POLE.x, y: Y_HEAD, w: COL_POLE.w, h: 0.4,
@@ -380,7 +369,8 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
       valign: 'middle', align: 'center', autoFit: false,
     });
 
-    if (i < 4) {
+    // Séparateur entre lignes i et i+1 uniquement (pas après la 5e)
+    if (i < 3) {
       slide.addShape(pptx.ShapeType.line, {
         x: 0.56, y: y + ROW_H, w: 8.88, h: 0,
         line: { color: '666666', width: 0.3 },
@@ -389,22 +379,22 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   });
 
   slide.addShape(pptx.ShapeType.line, {
-    x: 0.56, y: Y_TOTAL - 0.15, w: 8.88, h: 0,
+    x: 0.56, y: y_total - 0.2, w: 8.88, h: 0,
     line: { color: 'AAAAAA', width: 0.5 },
   });
 
   addText(slide, 'TOTAL', {
-    x: COL_POLE.x, y: Y_TOTAL, w: COL_POLE.w, h: 0.5,
+    x: COL_POLE.x, y: y_total, w: COL_POLE.w, h: 0.5,
     fontSize: 13, bold: true, color: COL_WHITE,
     align: 'left', valign: 'middle', autoFit: false,
   });
   addText(slide, `${totalH} h`, {
-    x: COL_VOL.x, y: Y_TOTAL, w: COL_VOL.w, h: 0.5,
+    x: COL_VOL.x, y: y_total, w: COL_VOL.w, h: 0.5,
     fontSize: 13, bold: true, color: COL_WHITE,
     align: 'center', valign: 'middle', autoFit: false,
   });
   addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
-    x: COL_COUT.x, y: Y_TOTAL, w: COL_COUT.w, h: 0.5,
+    x: COL_COUT.x, y: y_total, w: COL_COUT.w, h: 0.5,
     fontSize: 13, bold: true, color: COL_WHITE,
     align: 'center', valign: 'middle', autoFit: false,
   });
