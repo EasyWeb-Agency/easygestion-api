@@ -19,6 +19,8 @@ COPY canonical_to_pptx.py .
 COPY server.py .
 COPY generate-pptx.js .
 COPY assets/ ./assets/
+COPY fonts/ ./fonts/
+RUN cp fonts/*.ttf /usr/share/fonts/ && fc-cache -f
 
 EXPOSE 8080
 
