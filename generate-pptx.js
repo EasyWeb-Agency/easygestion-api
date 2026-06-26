@@ -323,15 +323,17 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   const tjm = data.projet?.tjm || 100;
 
   const X_POLE = 0.56;
-  const W_POLE = 3.8;
-  const X_HRS = 4.6;
-  const W_HRS = 2.0;
-  const X_COUT = 7.2;
-  const W_COUT = 2.2;
+  const W_POLE = 3.6;
+  const X_HRS = 5.2;
+  const W_HRS = 1.8;
+  const X_COUT = 7.4;
+  const W_COUT = 2.0;
 
-  const Y_START = 1.90;
-  const Y_TOTAL_FOND = 5.10;
-  const ROW_H = (Y_TOTAL_FOND - Y_START) / 6;
+  const Y_PREMIER_TRAIT = 1.95;
+  const Y_TRAIT_TOTAL = 5.05;
+  const BANDE = (Y_TRAIT_TOTAL - Y_PREMIER_TRAIT) / 5;
+
+  const Y_TOTAL = 5.20;
 
   const cinqModules = modules.slice(0, 5);
   let totalH = 0;
@@ -343,33 +345,32 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
     totalH += h;
     totalEur += eur;
 
-    const y = Y_START + (i + 0.5) * ROW_H - 0.15;
+    const y = Y_PREMIER_TRAIT + (i + 0.5) * BANDE - 0.15;
 
     addText(slide, stripMd(m.titre || ''), {
-      x: X_POLE, y, w: W_POLE, h: ROW_H * 0.8,
+      x: X_POLE, y, w: W_POLE, h: BANDE * 0.85,
       fontSize: 14, color: COL_WHITE, wrap: true,
       valign: 'middle', align: 'left', autoFit: false,
     });
     addText(slide, `${h} h`, {
-      x: X_HRS, y, w: W_HRS, h: ROW_H * 0.8,
+      x: X_HRS, y, w: W_HRS, h: BANDE * 0.85,
       fontSize: 14, color: COL_WHITE,
       valign: 'middle', align: 'center', autoFit: false,
     });
     addText(slide, `${eur.toLocaleString('fr-FR')} €`, {
-      x: X_COUT, y, w: W_COUT, h: ROW_H * 0.8,
+      x: X_COUT, y, w: W_COUT, h: BANDE * 0.85,
       fontSize: 14, color: COL_WHITE,
       valign: 'middle', align: 'right', autoFit: false,
     });
   });
 
-  const Y_TOT = Y_TOTAL_FOND - 0.1;
   addText(slide, `${totalH} h`, {
-    x: X_HRS, y: Y_TOT, w: W_HRS, h: 0.5,
+    x: X_HRS, y: Y_TOTAL, w: W_HRS, h: 0.45,
     fontSize: 14, bold: true, color: COL_WHITE,
     valign: 'middle', align: 'center', autoFit: false,
   });
   addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
-    x: X_COUT, y: Y_TOT, w: W_COUT, h: 0.5,
+    x: X_COUT, y: Y_TOTAL, w: W_COUT, h: 0.45,
     fontSize: 14, bold: true, color: COL_WHITE,
     valign: 'middle', align: 'right', autoFit: false,
   });
