@@ -322,31 +322,34 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
   const modules = data.budget_detail?.modules || [];
   const tjm = data.projet?.tjm || 100;
 
-  const COL_POLE = { x: 0.56, w: 4.2, align: 'left' };
-  const COL_VOL = { x: 4.9, w: 2.0, align: 'center' };
-  const COL_COUT = { x: 7.1, w: 2.3, align: 'center' };
+  const COL_POLE = { x: 0.56, w: 4.6, align: 'left' };
+  const COL_VOL = { x: 5.0, w: 2.0, align: 'center' };
+  const COL_COUT = { x: 6.9, w: 2.5, align: 'center' };
 
-  const Y_START = 2.25;
-  const ROW_H = 0.55;
+  const Y_HEAD = 1.55;
+  const Y_LIGNE = 1.95;
+  const Y_START = 2.2;
+  const ROW_H = 0.62;
+  const Y_TOTAL = 5.15;
 
   addText(slide, 'Pôles de développement', {
-    x: COL_POLE.x, y: 1.55, w: COL_POLE.w, h: 0.4,
-    fontSize: 14, bold: true, color: COL_WHITE,
-    align: 'left', autoFit: false,
+    x: COL_POLE.x, y: Y_HEAD, w: COL_POLE.w, h: 0.4,
+    fontSize: 13, bold: true, color: COL_WHITE,
+    align: 'left', wrap: false, autoFit: false,
   });
   addText(slide, 'Volume horaire', {
-    x: COL_VOL.x, y: 1.55, w: COL_VOL.w, h: 0.4,
-    fontSize: 14, bold: true, color: COL_WHITE,
-    align: 'center', autoFit: false,
+    x: COL_VOL.x, y: Y_HEAD, w: COL_VOL.w, h: 0.4,
+    fontSize: 13, bold: true, color: COL_WHITE,
+    align: 'center', wrap: false, autoFit: false,
   });
-  addText(slide, `Coût total (TJM : ${tjm}€/h)`, {
-    x: COL_COUT.x, y: 1.55, w: COL_COUT.w, h: 0.4,
-    fontSize: 14, bold: true, color: COL_WHITE,
-    align: 'center', autoFit: false,
+  addText(slide, 'Coût total (TJM : 100/h)', {
+    x: COL_COUT.x, y: Y_HEAD, w: COL_COUT.w, h: 0.4,
+    fontSize: 13, bold: true, color: COL_WHITE,
+    align: 'center', wrap: false, autoFit: false,
   });
 
   slide.addShape(pptx.ShapeType.line, {
-    x: 0.56, y: 1.95, w: 8.88, h: 0,
+    x: 0.56, y: Y_LIGNE, w: 8.88, h: 0,
     line: { color: 'AAAAAA', width: 0.5 },
   });
 
@@ -363,17 +366,17 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
 
     addText(slide, stripMd(m.titre || ''), {
       x: COL_POLE.x, y, w: COL_POLE.w, h: ROW_H,
-      fontSize: 14, color: COL_WHITE, wrap: true,
+      fontSize: 13, color: COL_WHITE, wrap: true,
       valign: 'middle', align: 'left', autoFit: false,
     });
     addText(slide, `${h} h`, {
       x: COL_VOL.x, y, w: COL_VOL.w, h: ROW_H,
-      fontSize: 14, color: COL_WHITE,
+      fontSize: 13, color: COL_WHITE,
       valign: 'middle', align: 'center', autoFit: false,
     });
     addText(slide, `${eur.toLocaleString('fr-FR')} €`, {
       x: COL_COUT.x, y, w: COL_COUT.w, h: ROW_H,
-      fontSize: 14, color: COL_WHITE,
+      fontSize: 13, color: COL_WHITE,
       valign: 'middle', align: 'center', autoFit: false,
     });
 
@@ -385,25 +388,24 @@ function buildSlide17_Repartition(pptx, data, assetsDir) {
     }
   });
 
-  const y_total = Y_START + 5 * ROW_H + 0.2;
   slide.addShape(pptx.ShapeType.line, {
-    x: 0.56, y: y_total - 0.15, w: 8.88, h: 0,
+    x: 0.56, y: Y_TOTAL - 0.15, w: 8.88, h: 0,
     line: { color: 'AAAAAA', width: 0.5 },
   });
 
   addText(slide, 'TOTAL', {
-    x: COL_POLE.x, y: y_total, w: COL_POLE.w, h: 0.5,
-    fontSize: 14, bold: true, color: COL_WHITE,
+    x: COL_POLE.x, y: Y_TOTAL, w: COL_POLE.w, h: 0.5,
+    fontSize: 13, bold: true, color: COL_WHITE,
     align: 'left', valign: 'middle', autoFit: false,
   });
   addText(slide, `${totalH} h`, {
-    x: COL_VOL.x, y: y_total, w: COL_VOL.w, h: 0.5,
-    fontSize: 14, bold: true, color: COL_WHITE,
+    x: COL_VOL.x, y: Y_TOTAL, w: COL_VOL.w, h: 0.5,
+    fontSize: 13, bold: true, color: COL_WHITE,
     align: 'center', valign: 'middle', autoFit: false,
   });
   addText(slide, `${totalEur.toLocaleString('fr-FR')} €`, {
-    x: COL_COUT.x, y: y_total, w: COL_COUT.w, h: 0.5,
-    fontSize: 14, bold: true, color: COL_WHITE,
+    x: COL_COUT.x, y: Y_TOTAL, w: COL_COUT.w, h: 0.5,
+    fontSize: 13, bold: true, color: COL_WHITE,
     align: 'center', valign: 'middle', autoFit: false,
   });
 }
