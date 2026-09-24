@@ -18,6 +18,8 @@ import os
 import subprocess
 import tempfile
 import uuid
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Request
@@ -26,10 +28,16 @@ from fastapi.responses import Response, JSONResponse
 
 # --- Configuration via variables d'environnement ---
 API_KEY = os.environ.get("API_KEY", "")  # secret partagé avec EasyGestion
-ALLOWED_ORIGINS = os.environ.get(
-    "ALLOWED_ORIGINS",
-    "https://easy-agency-ultime.vercel.app,http://localhost:5173",
-).split(",")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get(
+        "ALLOWED_ORIGINS",
+        "https://easy-agency-ultime.vercel.app,http://localhost:5173,http://localhost:5174",
+    ).split(",")
+    if o.strip()
+]
 
 BASE_DIR = Path(__file__).parent
 SCRIPT = BASE_DIR / "generate_devis_v4.py"
@@ -41,7 +49,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -60,7 +68,7 @@ def root() -> dict:
     return {
         "service": "EasyGestion Devis API",
         "version": "1.0",
-        "endpoints": ["/devis (POST)", "/healthz (GET)"],
+        "endpoints": ["/devis (POST)", "/healthz (GET)", "/v1/storage/client-files (DELETE)"],
     }
 
 
@@ -73,6 +81,53 @@ def healthz() -> dict:
         "assets_exists": ASSETS_DIR.is_dir(),
         "assets_files": [p.name for p in ASSETS_DIR.glob("*.png")] if ASSETS_DIR.is_dir() else [],
     }
+
+
+@app.delete("/v1/storage/client-files")
+def delete_client_storage_file(
+    path: str,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+) -> dict:
+    """Supprime un fichier du bucket client-files (service role, contourne RLS)."""
+    _check_auth(x_api_key)
+
+    if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY requis sur Railway",
+        )
+
+    clean = path.strip().lstrip("/")
+    if not clean or ".." in clean.split("/"):
+        raise HTTPException(status_code=400, detail="Chemin invalide")
+
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+    }
+
+    def _delete(url: str, body: bytes | None = None) -> int:
+        req_headers = dict(headers)
+        if body is not None:
+            req_headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, data=body, method="DELETE", headers=req_headers)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return resp.status
+        except urllib.error.HTTPError as err:
+            raise HTTPException(status_code=err.code, detail=err.read().decode()[:500]) from err
+
+    object_url = f"{SUPABASE_URL}/storage/v1/object/client-files/{clean}"
+    try:
+        status = _delete(object_url)
+        return {"ok": True, "status": status, "path": clean}
+    except HTTPException as first_err:
+        if first_err.status_code not in (400, 404):
+            raise
+        prefix_url = f"{SUPABASE_URL}/storage/v1/object/client-files"
+        body = json.dumps({"prefixes": [clean]}).encode("utf-8")
+        status = _delete(prefix_url, body)
+        return {"ok": True, "status": status, "path": clean, "mode": "prefix"}
 
 
 @app.post("/devis")
